@@ -1,0 +1,208 @@
+<release date="XXXX-XX-XX" version="2.55.0dev" title="UNDER DEVELOPMENT">
+    <release-core-list>
+        <release-bug-list>
+            <release-item>
+                <github-pull-request id="2533"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Do not set <br-option>recovery_target_timeline=current</br-option> for PostgreSQL &amp;lt; 12.</p>
+            </release-item>
+
+            <release-item>
+                <github-issue id="2543"/>
+                <github-pull-request id="2554"/>
+
+                <release-item-contributor-list>
+                    <release-item-ideator id="ales.zeleny"/>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Fix expire archive range logging.</p>
+            </release-item>
+
+            <release-item>
+                <github-pull-request id="2539"/>
+
+                <release-item-contributor-list>
+                    <release-item-ideator id="susantha.bathige"/>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Fix error reporting for queries with no results.</p>
+            </release-item>
+        </release-bug-list>
+
+        <release-feature-list>
+            <release-item>
+                <github-pull-request id="2534"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Verify recovery target timeline.</p>
+            </release-item>
+
+            <release-item>
+                <commit subject="Add support for S3 requester pays.">
+                    <github-pull-request id="2560"/>
+                </commit>
+                <commit subject="Add support for GCS requester pays.">
+                    <github-pull-request id="2557"/>
+                </commit>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="timothee.peignier"/>
+                    <release-item-reviewer id="david.steele"/>
+                </release-item-contributor-list>
+
+                <p>Add support for S3/GCS requester pays.</p>
+            </release-item>
+
+            <release-item>
+                <github-issue id="2410"/>
+                <github-pull-request id="2526"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="stefan.fercot"/>
+                    <release-item-reviewer id="david.steele"/>
+                </release-item-contributor-list>
+
+                <p>Add numeric output to <cmd>version</cmd> command.</p>
+            </release-item>
+        </release-feature-list>
+
+        <release-improvement-list>
+            <release-item>
+                <github-pull-request id="2512"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Allow backup command to operate on remote repositories.</p>
+            </release-item>
+
+            <release-item>
+                <commit subject="Use lz4 for protocol compression.">
+                    <github-pull-request id="2488"/>
+                </commit>
+                <commit subject="Remove reference to disabling network compression in the documentation."/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Use <proper>lz4</proper> for protocol compression.</p>
+            </release-item>
+
+            <release-item>
+                <commit subject="Add detail logging to expire test."/>
+                <commit subject="Add detail logging for expired archive path.">
+                    <github-issue id="2543"/>
+                    <github-pull-request id="2559"/>
+                </commit>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="stefan.fercot"/>
+                    <release-item-reviewer id="david.steele"/>
+                </release-item-contributor-list>
+
+                <p>Add detail logging for expired archive path.</p>
+            </release-item>
+
+            <release-item>
+                <github-pull-request id="2472"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Remove support for <proper>PostgreSQL</proper> <id>9.4</id>.</p>
+            </release-item>
+
+            <release-item>
+                <github-pull-request id="2470"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="david.christensen"/>
+                </release-item-contributor-list>
+
+                <p>Remove <proper>autoconf</proper>/<proper>make</proper> build.</p>
+            </release-item>
+        </release-improvement-list>
+
+        <release-development-list>
+            <release-item>
+                <github-pull-request id="2306"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="david.christensen"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Full/incremental backup method.</p>
+            </release-item>
+
+            <release-item>
+                <release-item-contributor-list>
+                    <release-item-ideator id="john.naylor"/>
+                    <release-item-contributor id="david.steele"/>
+                </release-item-contributor-list>
+
+                <p>Improve hex encode performance with bytewise lookup.</p>
+            </release-item>
+        </release-development-list>
+    </release-core-list>
+
+    <release-doc-list>
+        <release-improvement-list>
+            <release-item>
+                <github-pull-request id="2541"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="greg.clough"/>
+                    <release-item-reviewer id="david.steele"/>
+                </release-item-contributor-list>
+
+                <p>Clarify requirement for local/remote <backrest/> versions to match.</p>
+            </release-item>
+
+            <release-item>
+                <github-pull-request id="2538"/>
+
+                <release-item-contributor-list>
+                    <release-item-ideator id="christophe.courtois"/>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                    <release-item-reviewer id="christophe.courtois"/>
+                </release-item-contributor-list>
+
+                <p>Caveat <br-setting>--tablespace-map-all</br-setting> regarding tablespace creation.</p>
+            </release-item>
+
+            <release-item>
+                <github-pull-request id="2542"/>
+
+                <release-item-contributor-list>
+                    <release-item-contributor id="david.steele"/>
+                    <release-item-reviewer id="stefan.fercot"/>
+                </release-item-contributor-list>
+
+                <p>Change <br-setting>--process-max</br-setting> recommendation for object stores to <br-setting>--repo-bundle</br-setting>.</p>
+            </release-item>
+        </release-improvement-list>
+    </release-doc-list>
+</release>
