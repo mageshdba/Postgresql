@@ -1,0 +1,55 @@
+
+#!/bin/bash
+s3_dir=/audit/Paylater_pg/dc/
+archive_dir=/dberrorlog/audit/old_logs_audit
+>/tmp/s3sync-succ.txt
+>/tmp/s3sync-err.txt
+sdat=`date +%F" "%T`
+/bin/echo "S3 sync has been started at ${sdat}" >>/tmp/s3sync-succ.txt
+aws s3 sync $archive_dir  s3://m2p-s3-prd-db-bkp$s3_dir >>/tmp/s3sync-succ.txt 2>/tmp/s3sync-err.txt
+edat=`date +%F" "%T`
+/bin/echo "S3 sync has been completed at ${edat}" >>/tmp/s3sync-succ.txt
+find $archive_dir -maxdepth 1 -mtime +1 -type f -exec rm -rf {} \;
+/bin/echo "Audit log cleanup completed at  ${edat}" >>/tmp/s3sync-succ.txt
+
+
+#!/bin/bash
+# This is audit  log cleanup script.
+
+audit_log_dir=/dberrorlog/audit/
+archive_dir=/dberrorlog/audit/old_logs_audit/
+TODAY=`date +"%Y%m%d"`
+DATE=`date +"%d%b%Y_%I:%M:%S%p"`
+date >> $archive_dir/audit_rotation.out
+cp -p $audit_log_dir/audit-${TODAY}_0000.log "$archive_dir/audit-${DATE}.log"
+#cp -p $audit_log_dir/audit-${TODAY}_0000.log  $archive_dir/audit-$(date +"%Y%m%d%H%M").log
+#rsync -avhz $audit_log_dir/audit-${TODAY}_0000.log  $archive_dir/audit-${TODAY}_0000.log
+cat /dev/null > $audit_log_dir/audit-${TODAY}_0000.log
+#mv $archive_dir/audit.log "$archive_dir/audit-$(date +"%Y%m%d%H%M")"
+find $audit_log_dir -maxdepth 1 -mtime +2 -type f -exec rm -rf {} \;
+gzip  "$archive_dir/audit-${DATE}.log"
+echo "Audit rotation completed "${TODAY} >> $archive_dir/audit_rotation.out
+
+
+
+#!/bin/bash
+# This is audit  log cleanup script.
+
+TODAY=`date +"%Y%m%d"`
+DATE=`date +"%d%b%Y_%I:%M:%S%p"`
+path=/dblog/pgsql/archive
+
+echo "$path"
+
+find $path -mtime +5 -type f -exec rm -rf {} \;
+
+##POSTGRES
+0 0 * * * /backup/scripts/s3_sync_rotation.sh
+0 */2 * * * /backup/scripts/audit_log_rotation.sh
+0 0 * * * /backup/scripts/archive.sh
+00 00 * * * /backup/scripts/backup.sh 
+
+
+archive.sh
+audit_log_rotation.sh
+s3_sync_rotation.sh

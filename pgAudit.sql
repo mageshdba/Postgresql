@@ -1,0 +1,309 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Search for Audit extension for our Postgres version 14
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[root@az-sin-m2p-preprod-db01 pgaudit]# yum search audit
+Last metadata expiration check: 2:47:23 ago on Fri 18 Mar 2022 04:33:01 PM IST.
+======================================================================= 
+Name & Summary Matched: audit 
+========================================================================
+audit.x86_64 : User space tools for kernel auditing
+audit-libs.i686 : Dynamic library for libaudit
+audit-libs.x86_64 : Dynamic library for libaudit
+audit-libs-devel.i686 : Header files for libaudit
+audit-libs-devel.x86_64 : Header files for libaudit
+globus-gram-audit.noarch : Grid Community Toolkit - GRAM Jobmanager Auditing
+pgaudit11_96.x86_64 : PostgreSQL Audit Extension
+pgaudit12_10.x86_64 : PostgreSQL Audit Extension
+pgaudit13_11.x86_64 : PostgreSQL Audit Extension
+pgaudit14_12.x86_64 : PostgreSQL Audit Extension
+pgaudit15_13.x86_64 : PostgreSQL Audit Extension
+pgaudit16_14.x86_64 : PostgreSQL Audit Extension
+pgaudit_analyze.x86_64 : PostgreSQL Audit Analyzer
+pgaudit_analyze.noarch : PostgreSQL Audit Analyzer
+pgauditlogtofile-10.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile-11.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile-12.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile-13.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile-96.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile_10.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile_11.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile_12.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile_13.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile_14.x86_64 : PostgreSQL Audit Log To File Extension
+pgauditlogtofile_96.x86_64 : PostgreSQL Audit Log To File Extension
+python3-audit.x86_64 : Python3 bindings for libaudit
+rsyslog-mmaudit.x86_64 : Message modification module supporting Linux audit format
+sos-audit.noarch : Audit use of some commands for support purposes
+============================================================================
+ Name Matched: audit 
+=============================================================================
+cyanaudit12.noarch : DML logging tool for PostgreSQL
+=========================================================================== 
+Summary Matched: audit
+===========================================================================
+acme-tiny.noarch : Tiny auditable script to issue, renew Let's Encrypt certificates
+audispd-plugins.x86_64 : Plugins for the audit event dispatcher
+audispd-plugins-zos.x86_64 : z/OS plugin for the audit event dispatcher
+dsniff.x86_64 : Tools for network auditing and penetration testing
+hping3.x86_64 : TCP/IP stack auditing and much more
+lynis.noarch : Security and system auditing tool
+mod_security-mlogc.x86_64 : ModSecurity Audit Log Collector
+pgcluu.noarch : PostgreSQL performance monitoring and auditing tool
+rootsh.x86_64 : Shell wrapper for auditing
+sipvicious.noarch : Set of tools to audit SIP based VoIP systems
+twa.noarch : Tiny web auditor with strong opinions
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+INSTALLLING PGAUDIT EXTENSION
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[root@az-sin-m2p-preprod-db01 pgaudit]# yum install pgaudit16_14.x86_64
+Last metadata expiration check: 2:48:33 ago on Fri 18 Mar 2022 04:33:01 PM IST.
+Dependencies resolved.
+==============================================================================================================================================================================
+ Package                                     Architecture                          Version                                        Repository                             Size
+==============================================================================================================================================================================
+Installing:
+ pgaudit16_14                                x86_64                                1.6.2-1.rhel8                                  pgdg14                                 56 k
+
+Transaction Summary
+==============================================================================================================================================================================
+Install  1 Package
+
+Total download size: 56 k
+Installed size: 100 k
+Is this ok [y/N]: y
+Downloading Packages:
+pgaudit16_14-1.6.2-1.rhel8.x86_64.rpm                                                                                                          48 kB/s |  56 kB     00:01
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                          48 kB/s |  56 kB     00:01
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                                      1/1
+  Installing       : pgaudit16_14-1.6.2-1.rhel8.x86_64                                                                                                                    1/1
+  Running scriptlet: pgaudit16_14-1.6.2-1.rhel8.x86_64                                                                                                                    1/1
+  Verifying        : pgaudit16_14-1.6.2-1.rhel8.x86_64                                                                                                                    1/1
+
+Installed:
+  pgaudit16_14-1.6.2-1.rhel8.x86_64
+
+Complete!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verifying if the pgAudit extension available in library:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[root@az-sin-m2p-preprod-db01 bitcode]# cd /usr/pgsql-14/lib/
+[root@az-sin-m2p-preprod-db01 lib]# ls -latr
+total 3792
+-rwxr-xr-x 1 root root  72648 Sep 29 13:17 pg_cron.so
+lrwxrwxrwx 1 root root     13 Sep 29 22:21 libpq.so.5 -> libpq.so.5.14
+lrwxrwxrwx 1 root root     18 Sep 29 22:21 libpgtypes.so.3 -> libpgtypes.so.3.14
+lrwxrwxrwx 1 root root     15 Sep 29 22:21 libecpg.so.6 -> libecpg.so.6.14
+lrwxrwxrwx 1 root root     15 Sep 29 22:21 libecpg.so -> libecpg.so.6.14
+lrwxrwxrwx 1 root root     22 Sep 29 22:21 libecpg_compat.so.3 -> libecpg_compat.so.3.14
+-rwxr-xr-x 1 root root  36544 Sep 29 22:21 utf8_and_win.so
+-rwxr-xr-x 1 root root 175712 Sep 29 22:21 utf8_and_uhc.so
+-rwxr-xr-x 1 root root  89696 Sep 29 22:21 utf8_and_sjis.so
+-rwxr-xr-x 1 root root 134728 Sep 29 22:21 utf8_and_sjis2004.so
+-rwxr-xr-x 1 root root 171616 Sep 29 22:21 utf8_and_johab.so
+-rwxr-xr-x 1 root root  32464 Sep 29 22:21 utf8_and_iso8859.so
+-rwxr-xr-x 1 root root   7792 Sep 29 22:21 utf8_and_iso8859_1.so
+-rwxr-xr-x 1 root root 155232 Sep 29 22:21 utf8_and_gbk.so
+-rwxr-xr-x 1 root root 269960 Sep 29 22:21 utf8_and_gb18030.so
+-rwxr-xr-x 1 root root 208480 Sep 29 22:21 utf8_and_euc_tw.so
+-rwxr-xr-x 1 root root 110184 Sep 29 22:21 utf8_and_euc_kr.so
+-rwxr-xr-x 1 root root 159328 Sep 29 22:21 utf8_and_euc_jp.so
+-rwxr-xr-x 1 root root  85600 Sep 29 22:21 utf8_and_euc_cn.so
+-rwxr-xr-x 1 root root 212552 Sep 29 22:21 utf8_and_euc2004.so
+-rwxr-xr-x 1 root root  15984 Sep 29 22:21 utf8_and_cyrillic.so
+-rwxr-xr-x 1 root root 122464 Sep 29 22:21 utf8_and_big5.so
+-rwxr-xr-x 1 root root 201352 Sep 29 22:21 plpgsql.so
+-rwxr-xr-x 1 root root  24912 Sep 29 22:21 pgoutput.so
+-rwxr-xr-x 1 root root  29440 Sep 29 22:21 libpqwalreceiver.so
+-rwxr-xr-x 1 root root 339288 Sep 29 22:21 libpq.so.5.14
+-rwxr-xr-x 1 root root  83784 Sep 29 22:21 libpgtypes.so.3.14
+-rwxr-xr-x 1 root root 101448 Sep 29 22:21 libecpg.so.6.14
+-rwxr-xr-x 1 root root  38384 Sep 29 22:21 libecpg_compat.so.3.14
+-rwxr-xr-x 1 root root  11888 Sep 29 22:21 latin_and_mic.so
+-rwxr-xr-x 1 root root  11936 Sep 29 22:21 latin2_and_win1250.so
+-rwxr-xr-x 1 root root  16520 Sep 29 22:21 euc_tw_and_big5.so
+-rwxr-xr-x 1 root root   7776 Sep 29 22:21 euc_kr_and_mic.so
+-rwxr-xr-x 1 root root  16024 Sep 29 22:21 euc_jp_and_sjis.so
+-rwxr-xr-x 1 root root   7768 Sep 29 22:21 euc_cn_and_mic.so
+-rwxr-xr-x 1 root root  11856 Sep 29 22:21 euc2004_sjis2004.so
+-rwxr-xr-x 1 root root  12112 Sep 29 22:21 dict_xsyn.so
+-rwxr-xr-x 1 root root 804640 Sep 29 22:21 dict_snowball.so
+-rwxr-xr-x 1 root root  11976 Sep 29 22:21 dict_int.so
+-rwxr-xr-x 1 root root  16160 Sep 29 22:21 cyrillic_and_mic.so
+-rwxr-xr-x 1 root root  33344 Mar  4 18:09 pgaudit.so
+drwxr-xr-x 6 root root     52 Mar 11 15:12 ..
+drwxr-xr-x 4 root root     84 Mar 18 19:21 bitcode
+drwxr-xr-x 3 root root   4096 Mar 18 19:21 .
+[root@az-sin-m2p-preprod-db01 lib]# vi /var/lib/pgsql/14/data/postgresql.conf
+[root@az-sin-m2p-preprod-db01 lib]# su - postgres
+Last login: Thu Mar 17 18:20:56 IST 2022 on pts/0
+[postgres@az-sin-m2p-preprod-db01 ~]$ psql
+psql (14.0)
+Type "help" for help.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Checking if the extension is available before restart of postgres
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+postgres=# select * from pg_extension;
+  oid  | extname | extowner | extnamespace | extrelocatable | extversion |         extconfig         | extcondition
+-------+---------+----------+--------------+----------------+------------+---------------------------+---------------
+ 14682 | plpgsql |       10 |           11 | f              | 1.0        |                           |
+ 16948 | pg_cron |       10 |         2200 | f              | 1.4        | {16951,16950,16970,16969} | {"","","",""}
+(2 rows)
+
+postgres=# CREATE EXTENSION pgaudit;
+ERROR:  pgaudit must be loaded via shared_preload_libraries
+postgres=# \q
+[postgres@az-sin-m2p-preprod-db01 ~]$ logout
+~~~~~~~~~~~~~~~~~~~~~
+Restarting PostgreSQL
+~~~~~~~~~~~~~~~~~~~~~
+[root@az-sin-m2p-preprod-db01 lib]# service postgresql-14 status
+Redirecting to /bin/systemctl status postgresql-14.service
+● postgresql-14.service - PostgreSQL 14 database server
+   Loaded: loaded (/usr/lib/systemd/system/postgresql-14.service; enabled; vendor preset: disabled)
+   Active: active (running) since Mon 2022-03-14 15:59:05 IST; 4 days ago
+     Docs: https://www.postgresql.org/docs/14/static/
+  Process: 306385 ExecStartPre=/usr/pgsql-14/bin/postgresql-14-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+ Main PID: 306391 (postmaster)
+    Tasks: 10 (limit: 100785)
+   Memory: 541.1M
+   CGroup: /system.slice/postgresql-14.service
+           ├─306391 /usr/pgsql-14/bin/postmaster -D /var/lib/pgsql/14/data/
+           ├─306392 postgres: logger
+           ├─306394 postgres: checkpointer
+           ├─306395 postgres: background writer
+           ├─306396 postgres: walwriter
+           ├─306397 postgres: autovacuum launcher
+           ├─306398 postgres: archiver
+           ├─306399 postgres: stats collector
+           ├─306400 postgres: pg_cron launcher
+           └─306401 postgres: logical replication launcher
+
+Mar 14 15:59:05 az-sin-m2p-preprod-db01.m2pfintech.com systemd[1]: Starting PostgreSQL 14 database server...
+Mar 14 15:59:05 az-sin-m2p-preprod-db01.m2pfintech.com postmaster[306391]: 2022-03-14 10:29:05.580 UTC [306391] LOG:  redirecting log output to logging collector process
+Mar 14 15:59:05 az-sin-m2p-preprod-db01.m2pfintech.com postmaster[306391]: 2022-03-14 10:29:05.580 UTC [306391] HINT:  Future log output will appear in directory "log".
+Mar 14 15:59:05 az-sin-m2p-preprod-db01.m2pfintech.com systemd[1]: Started PostgreSQL 14 database server.
+[root@az-sin-m2p-preprod-db01 lib]#
+[root@az-sin-m2p-preprod-db01 lib]# service postgresql-14 stop
+Redirecting to /bin/systemctl stop postgresql-14.service
+[root@az-sin-m2p-preprod-db01 lib]# service postgresql-14 start
+Redirecting to /bin/systemctl start postgresql-14.service
+[root@az-sin-m2p-preprod-db01 lib]# su - postgres
+Last login: Fri Mar 18 19:33:09 IST 2022 on pts/1
+[postgres@az-sin-m2p-preprod-db01 ~]$ psql
+psql (14.0)
+Type "help" for help.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Creating extension for enabling pgAudit
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+postgres=# create extension pgaudit;
+CREATE EXTENSION
+postgres=# select * from pg_extension;
+  oid  | extname | extowner | extnamespace | extrelocatable | extversion |         extconfig         | extcondition
+-------+---------+----------+--------------+----------------+------------+---------------------------+---------------
+ 14682 | plpgsql |       10 |           11 | f              | 1.0        |                           |
+ 16948 | pg_cron |       10 |         2200 | f              | 1.4        | {16951,16950,16970,16969} | {"","","",""}
+ 16988 | pgaudit |       10 |         2200 | t              | 1.6.2      |                           |
+(3 rows)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Verifyig audit parameters before enabling:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+postgres=# SELECT name,setting FROM pg_settings WHERE name LIKE 'pgaudit%';
+            name            | setting
+----------------------------+---------
+ pgaudit.log                | none
+ pgaudit.log_catalog        | on
+ pgaudit.log_client         | off
+ pgaudit.log_level          | log
+ pgaudit.log_parameter      | off
+ pgaudit.log_relation       | off
+ pgaudit.log_rows           | off
+ pgaudit.log_statement      | on
+ pgaudit.log_statement_once | off
+ pgaudit.role               |
+(10 rows)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Enabling audit for DDL and Write opeations:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+postgres=#  xc
+SET
+postgres=# SELECT name,setting FROM pg_settings WHERE name LIKE 'pgaudit%';
+            name            |  setting
+----------------------------+-----------
+ pgaudit.log                | write,ddl
+ pgaudit.log_catalog        | on
+ pgaudit.log_client         | off
+ pgaudit.log_level          | log
+ pgaudit.log_parameter      | off
+ pgaudit.log_relation       | off
+ pgaudit.log_rows           | off
+ pgaudit.log_statement      | on
+ pgaudit.log_statement_once | off
+ pgaudit.role               |
+(10 rows)
+
+pgaudit.log = 'write,ddl'
+pgaudit.log_catalog = on
+pgaudit.log_level = log
+pgaudit.log_parameter = on
+pgaudit.log_relation = on
+pgaudit.log_statement_once = off
+pgaudit.role = 'auditor'
+
+
+postgres=# create table testaudit(name varchar(10),sign varchar(10));
+CREATE TABLE
+
+postgres=# insert into testaudit values('Harish','hari');
+INSERT 0 1
+postgres=# insert into testaudit values('Sharath'hari');
+postgres=# alter table testaudit add column message varchar(50);
+ALTER TABLE
+                                               ^
+postgres=# alter table testaudit alter column name type varchar(20);
+ALTER TABLE
+postgres=# insert into testaudit values('Sharath Shankar','Sharath S','To check value');
+INSERT 0 1
+postgres=# update testaudit set sign='Sharath' where name='Sharath Shankar';
+UPDATE 1
+postgres=# insert into testaudit values('Mohan Rao','MohanR','To check deletion');
+INSERT 0 1
+postgres=# delete from testaudit where sign='MohanR';
+DELETE 1
+postgres=#
+
+=============================================================================
+Verifying log files for auditing
+
+[root@az-sin-m2p-preprod-db01 log]# grep -i audit postgresql-Fri.log
+2022-03-18 14:03:40.169 UTC [708236] STATEMENT:  create extension pgaudit
+        create extension pgaudit;
+2022-03-18 14:04:32.982 UTC [708236] STATEMENT:  create extension pgaudit
+        create extension pg_audit;
+2022-03-18 14:06:12.121 UTC [708236] ERROR:  pgaudit must be loaded via shared_preload_libraries
+2022-03-18 14:06:12.121 UTC [708236] STATEMENT:  CREATE EXTENSION pgaudit;
+2022-03-18 14:36:07.860 UTC [708515] STATEMENT:  set pgaudit.log =  'write,ddl'
+        SELECT name,setting FROM pg_settings WHERE name LIKE 'pgaudit%';
+2022-03-18 14:36:09.261 UTC [708515] STATEMENT:  set pgaudit.log =  'write,ddl'
+        SELECT name,setting FROM pg_settings WHERE name LIKE 'pgaudit%';
+2022-03-18 14:37:36.105 UTC [708515] LOG:  AUDIT: SESSION,1,1,DDL,CREATE TABLE,TABLE,public.testaudit,"create table testaudit(name varchar(10),sign varchar(10));",<not logged>
+2022-03-18 14:38:08.872 UTC [708515] STATEMENT:  insert into testaudit("Harish","hari");
+2022-03-18 14:38:27.163 UTC [708515] STATEMENT:  insert into testaudit values("Harish","hari");
+2022-03-18 14:38:43.308 UTC [708515] LOG:  AUDIT: SESSION,2,1,WRITE,INSERT,,,"insert into testaudit values('Harish','hari');",<not logged>
+2022-03-18 14:39:40.616 UTC [708515] LOG:  AUDIT: SESSION,3,1,DDL,ALTER TABLE,TABLE,public.testaudit,alter table testaudit add column message varchar(50);,<not logged>
+2022-03-18 14:40:29.850 UTC [708515] STATEMENT:  alter table testaudit alter column name varchar(20);
+2022-03-18 14:41:34.340 UTC [708515] LOG:  AUDIT: SESSION,4,1,DDL,ALTER TABLE,TABLE,public.testaudit,alter table testaudit alter column name type varchar(20);,<not logged>
+2022-03-18 14:42:19.541 UTC [708515] LOG:  AUDIT: SESSION,5,1,WRITE,INSERT,,,"insert into testaudit values('Sharath Shankar','Sharath S','To check value');",<not logged>
+2022-03-18 14:43:02.221 UTC [708515] LOG:  AUDIT: SESSION,6,1,WRITE,UPDATE,,,update testaudit set sign='Sharath' where name='Sharath Shankar';,<not logged>
+2022-03-18 14:43:43.253 UTC [708515] LOG:  AUDIT: SESSION,7,1,WRITE,INSERT,,,"insert into testaudit values('Mohan Rao','MohanR','To check deletion');",<not logged>
+2022-03-18 14:44:10.118 UTC [708515] LOG:  AUDIT: SESSION,8,1,WRITE,DELETE,,,delete from testaudit where sign='MohanR';,<not logged>
+
+

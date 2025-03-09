@@ -1,0 +1,32 @@
+To Install dblink extension for Postgres-14:
+===========================================
+
+1. Download the package
+	 wget https://download.postgresql.org/pub/repos/yum/14/redhat/rhel-8-x86_64/postgresql14-contrib-14.2-1PGDG.rhel8.x86_64.rpm
+
+2. Try to install it. While trying in Recon360 PreProd, we had received error
+	[root@aws-preprd-recon360-db01 ext]# yum install postgresql14-contrib-14.2-1PGDG.rhel8.x86_64.rpm
+	Updating Subscription Management repositories.
+	Last metadata expiration check: 2:41:58 ago on Thu 12 May 2022 10:19:51 AM IST.
+	No match for argument: postgresql14-contrib-14.2-1PGDG.rhel8.x86_64.rpm
+	Error: Unable to find a match
+
+3. Hence manually extracted the contents
+	rpm2cpio postgresql14-contrib-14.2-1PGDG.rhel8.x86_64.rpm | cpio -idmv
+
+4. Find the dblink control file in the same directory in usr/pgsql-14/share/extension/
+	dblink--1.0--1.1.sql
+	dblink--1.1--1.2.sql
+	dblink--1.2.sql
+	dblink.control
+
+5. Copy the above files in /usr/pgsql-14/share/extension/ and change the permission to 644
+
+6. Find the dblink.so file in path where you had extracted the rpm (usr/pgsql-14/lib/)
+	dblink.so
+
+7. Copy the dblink.so file to /usr/pgsql-14/lib/ and change the permission to 755
+
+8. Add the dblink name in the shared_preload_libraries in /var/lib/pgsql/14/data/postgresql.conf
+
+9. Login to postgres and create the dblink extension
