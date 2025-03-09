@@ -1,0 +1,506 @@
+FRM Prod 1	172.184.29.60
+FRM Prod 2	172.179.11.231
+
+
+https://girders.org/postgresql/2021/11/05/setup-postgresql14-replication/
+
+LOGIN
+sudo -u postgres psql
+sudo -u postgres psql -p 5665
+
+or
+sudo -i -u postgres
+or
+psql
+
+
+SHOW data_directory;
+SHOW config_file;
+SHOW hba_file;
+
+psql -h 174.1.0.7  -p 5665 -U readme postgres
+
+=========================================
+
+Objectives
+Set up two Compute Engine instances running Postgres.
+Create a new table for a guestbook app.
+Configure the primary server.
+Back up the primary server to the standby server.
+Configure the standby server to run in Hot Standby mode.
+Start the standby server and test it.
+================================================================================================
+
+Step 1:  Login TO Postgres
+------------------
+Run PSQL as user postgres and access the database named postgres:
+
+sudo -u postgres psql postgres
+
+CREATE TABLE guestbook (visitor_email text, vistor_id serial, date timestamp, message text);
+INSERT INTO guestbook (visitor_email, date, message) VALUES ( 'jim@gmail.com', current_date, 'This is a test.');
+INSERT INTO guestbook (visitor_email, date, message) VALUES ( 'nalinkumar_dba@gmail.com', current_date, 'hot standby');
+
+create role replication with REPLICATION password 'Repl@123' login;
+
+Step 2: Create a user for REPLICATION wih REPLICATION role
+-----------------------------
+create user replusr with REPLICATION password 'Repl@123' login;
+
+OR 
+
+sudo -u postgres createuser -U postgres replusr -P -c 5 --replication
+
+create user replusr with password 'Repl@123';
+
+/*This command performs the following actions:
+sudo -u postgres ensures that the createuser command runs as the user postgres. 
+Otherwise, Postgres will try to run the command by using peer authentication, which means the command will run under your Ubuntu user account. 
+This account probably doesn't have the right privileges to create the new user, which would cause an error.
+The -U option tells the createuser command to use the user postgres to create the new user.
+The name of the new user is replication. You'll enter that username in the configuration files.
+-P prompts you for the new user's password.
+-c sets a limit for the number of connections for the new user. The value 5 is sufficient for replication purposes.
+--replication grants the REPLICATION privilege to the user named replication.*/
+
+Step 2: Create the archive directory (IN DATADIR)
+-----------------------------
+mkdir -p /dblog/pgsql/archive
+chown -R postgres:postgres /dblog/pgsql/archive
+
+Step 2: Edit Config files - primary
+-----------------------------
+--pg_hba.conf
+vi /var/lib/pgsql/14/data/pg_hba.conf	
+
+# Allow replication connections
+host     replication     replusr         173.11.25.70/32        md5
+
+--postgresql.conf
+vi /var/lib/pgsql/14/data/postgresql.conf
+
+wal_level = hot_standby
+archive_mode = on
+archive_command = 'test ! -f /dblog/pgsql/archive/%f && cp %p /dblog/pgsql/archive/%f'
+#wal_keep_size = '1GB'
+#wal_compression = ON
+
+
+Step 2: Edit Config files - DR
+-----------------------------
+
+--pg_hba.conf
+vi /var/lib/pgsql/14/data/pg_hba.conf	
+
+# Allow replication connections
+host     replication     replusr         172.168.0.70/32        md5
+
+
+cat  /var/lib/pgsql/14/data/postgresql.conf |grep -i listen_add
+cat  /var/lib/pgsql/14/data/postgresql.conf |grep -i data_dir
+cat  /var/lib/pgsql/14/data/postgresql.conf |grep -i wal_level
+cat  /var/lib/pgsql/14/data/postgresql.conf |grep -i max_wal_
+cat  /var/lib/pgsql/14/data/postgresql.conf |grep -i wal_keep_
+cat  /var/lib/pgsql/14/data/postgresql.conf |grep -i archive_mode
+
+
+--Replication Slots in Primary 
+sudo -u postgres psql --port 5665
+
+select pg_create_physical_replication_slot('primary_repl_slot');
+
+select * from pg_replication_slots;
+
+//Add it to DR cnf
+primary_conninfo = 'user=replusr port=5665 host=172.168.0.70 application_name=172.168.0.70.replusr'
+primary_slot_name = 'primary_repl_slot'
+
+--Replication Slots in DR
+sudo -u postgres psql --port 5665
+
+select pg_create_physical_replication_slot('dr_repl_slot');
+
+select * from pg_replication_slots;
+
+//Add it to primary cnf
+primary_conninfo = 'user=replusr port=5665 host=172.168.0.70 application_name=172.168.0.70.replusr'
+primary_slot_name = 'standby_repl_slot' 
+
+
+
+Step 2: Restart the primary server
+-----------------------------
+service postgresql-14 restart
+service postgresql-14 status
+
+
+/*[root@az-prd-indus-pgdb-01 ~]# grep '^[[:blank:]]*[^[:blank:]#;]' /var/lib/pgsql/14/data/postgresql.conf
+data_directory = '/dbdata01/pgsql/data/data'                # use data in another directory
+listen_addresses = '*'          # what IP address(es) to listen on;
+port = 5665                             # (change requires restart)
+max_connections = 2000                  # (change requires restart)
+shared_buffers = 500MB                  # min 128kB
+temp_buffers = 32MB                     # min 800kB
+work_mem = 7GB                          # min 64kB
+maintenance_work_mem=1GB
+max_stack_depth = 4MB                  # min 100kB
+max_worker_processes = 8                # (change requires restart)
+max_parallel_workers_per_gather = 6     # taken from max_parallel_workers
+max_parallel_workers = 8                # maximum number of max_worker_processes that
+wal_level = hot_standby                 # minimal, replica, or logical
+wal_buffers = 128MB                      # min 32kB, -1 sets based on shared_buffers
+checkpoint_timeout = 1800               # range 30s-1d
+effective_cache_size = 12GB
+max_wal_senders = 3             # max number of walsender processes
+max_wal_size = 4GB
+min_wal_size = 192MB
+archive_mode = on               # enables archiving; off, on, or always
+archive_command = 'test ! -f /dblog/pgsql/archive/%f && cp %p /dblog/pgsql/archive/%f'          # command to use to archive a logfile segment
+shared_preload_libraries = 'pg_stat_statements,pg_cron,pgaudit,pgauditlogtofile,pgcrypto,plpgsql'       # (change requires restart)
+pgaudit.log='write,ddl'
+log_destination = 'stderr'              # Valid values are combinations of
+logging_collector = on                  # Enable capturing of stderr and csvlog
+log_directory = 'log'                   # directory where log files are written,
+log_filename = 'postgresql-%Y%m%d_%H%M.log'     # log file name pattern,
+log_rotation_age = 1d                   # Automatic rotation of logfiles will
+log_rotation_size = 0                   # Automatic rotation of logfiles will
+log_truncate_on_rotation = on           # If on, an existing log file with the
+log_line_prefix = '%m [%p] '            # special values:
+log_timezone = 'Asia/Kolkata'
+dynamic_shared_memory_type = posix      # the default is the first option
+datestyle = 'iso, mdy'
+timezone = 'Asia/Kolkata'
+lc_messages = 'en_US.UTF-8'                     # locale for system error message
+lc_monetary = 'en_US.UTF-8'                     # locale for monetary formatting
+lc_numeric = 'en_US.UTF-8'                      # locale for number formatting
+lc_time = 'en_US.UTF-8'                         # locale for time formatting
+default_text_search_config = 'pg_catalog.english'
+
+
+[root@az-prd-indus-pgdb-01 ~]# grep '^[[:blank:]]*[^[:blank:]#;]' /var/lib/pgsql/14/data/postgresql.conf
+data_directory = '/dbdata01/pgsql/data/data'                # use data in another directory
+listen_addresses = '*'          # what IP address(es) to listen on;
+port = 5665                             # (change requires restart)
+max_connections = 2000                  # (change requires restart)
+shared_buffers = 500MB                  # min 128kB
+temp_buffers = 32MB                     # min 800kB
+work_mem = 7GB                          # min 64kB
+maintenance_work_mem=1GB
+max_stack_depth = 4MB                  # min 100kB
+max_worker_processes = 8                # (change requires restart)
+max_parallel_workers_per_gather = 6     # taken from max_parallel_workers
+max_parallel_workers = 8                # maximum number of max_worker_processes that
+wal_level = hot_standby                 # minimal, replica, or logical
+wal_buffers = 128MB                      # min 32kB, -1 sets based on shared_buffers
+checkpoint_timeout = 1800               # range 30s-1d
+effective_cache_size = 12GB
+max_wal_senders = 3             # max number of walsender processes
+max_wal_size = 4GB
+min_wal_size = 192MB
+archive_mode = on               # enables archiving; off, on, or always
+archive_command = 'test ! -f /dblog/pgsql/archive/%f && cp %p /dblog/pgsql/archive/%f'          # command to use to archive a logfile segment
+shared_preload_libraries = 'pg_stat_statements,pg_cron,pgaudit,pgauditlogtofile,pgcrypto,plpgsql'       # (change requires restart)
+pgaudit.log='write,ddl'
+log_destination = 'stderr'              # Valid values are combinations of
+logging_collector = on                  # Enable capturing of stderr and csvlog
+log_directory = 'log'                   # directory where log files are written,
+log_filename = 'postgresql-%Y%m%d_%H%M.log'     # log file name pattern,
+log_rotation_age = 1d                   # Automatic rotation of logfiles will
+log_rotation_size = 0                   # Automatic rotation of logfiles will
+log_truncate_on_rotation = on           # If on, an existing log file with the
+log_line_prefix = '%m [%p] '            # special values:
+log_timezone = 'Asia/Kolkata'
+dynamic_shared_memory_type = posix      # the default is the first option
+datestyle = 'iso, mdy'
+timezone = 'Asia/Kolkata'
+lc_messages = 'en_US.UTF-8'                     # locale for system error message
+lc_monetary = 'en_US.UTF-8'                     # locale for monetary formatting
+lc_numeric = 'en_US.UTF-8'                      # locale for number formatting
+lc_time = 'en_US.UTF-8'                         # locale for time formatting
+default_text_search_config = 'pg_catalog.english'
+*/
+
+STANDBY
+=======
+
+Step : Stop postgres AND clear data 
+-----------------------------
+service postgresql-14 stop
+
+mkdir -p /dbdata01/pgsql_old
+
+chown -R  postgres:postgres pgsql
+
+
+mv /dbdata01/pgsql/  /dbdata01/pgsql_old/
+OR 
+mkdir -p /dbdata01/pgsql/
+cd /dbdata01/pgsql/
+rm -rvf * 
+
+chown -R  postgres:postgres /dbdata01/pgsql/
+
+--OR
+initdb -E UTF-8 /dbdata01/pgsql
+
+Step 2: Run the backup utility
+-----------------------------
+VERSION 14
+sudo -u postgres pg_basebackup --pgdata /dbdata01/pgsql/ --format=p --write-recovery-conf --checkpoint=fast --label=mffb --progress --host=172.184.29.60 --port=5665 --username=replusr
+
+
+sudo -u postgres pg_basebackup -h 174.1.0.6 -D /dbdata01/pgsql/data/ -U replication -v -P --xlog-method=stream 
+or
+pg_basebackup -h 174.1.0.6 -D /dbdata01/pgsql/data/ -U replication -v -P --xlog-method=stream 
+or
+pg_basebackup -h 174.1.0.6 -U replication -D /dbdata01/pgsql/data/
+or
+pg_basebackup -h 174.1.0.6 -U replication --checkpoint=fast \ -D /dbdata01/pgsql/data/ -R --slot=some_name -C
+pg_basebackup -h 174.1.0.6 -U replication -D /dbdata01/pgsql/data/ --checkpoint=fast -R --slot=some_name -C
+
+cd /dbdata01/pgsql
+sudo -u   
+pg_basebackup --pgdata /dbdata01/pgsql --format=p --write-recovery-conf --checkpoint=fast --label=mffb --progress --host=174.1.0.6 --port=5665 --username=replusr
+
+Node 3
+pg_basebackup -h 174.1.0.6 -U replication -D /dbdata01/pgsql/data/ --checkpoint=fast -R --slot=some_name2 -C
+
+Step 2: Edit Config files - Standby Alone
+-----------------------------
+--postgresql.conf
+vi /var/lib/pgsql/14/data/postgresql.conf
+
+standby_mode = on
+hot_standby = ON
+wal_level = hot_standby                  
+
+/* 
+[root@az-prd-indus-pgdb-02 ~]# grep '^[[:blank:]]*[^[:blank:]#;]' /var/lib/pgsql/14/data/postgresql.conf
+data_directory = '/dbdata01/pgsql/data/data'            # use data in another directory
+listen_addresses = '*'          # what IP address(es) to listen on;
+port = 5665                             # (change requires restart)
+max_connections = 2000                  # (change requires restart)
+shared_buffers = 500MB                  # min 128kB
+temp_buffers = 32MB                     # min 800kB
+work_mem = 7GB                          # min 64kB
+maintenance_work_mem = 1GB              # min 1MB
+max_stack_depth = 4MB                   # min 100kB
+dynamic_shared_memory_type = posix      # the default is the first option
+max_worker_processes = 8                # (change requires restart)
+max_parallel_workers_per_gather = 6     # taken from max_parallel_workers
+max_parallel_workers = 8                # maximum number of max_worker_processes that
+wal_level = hot_standby                 # minimal, replica, or logical
+wal_buffers = 128MB                     # min 32kB, -1 sets based on shared_buffers
+checkpoint_timeout = 1800               # range 30s-1d
+max_wal_size = 4GB
+min_wal_size = 192MB
+archive_mode = on               # enables archiving; off, on, or always
+archive_command = 'test ! -f /dblog/pgsql/archive/%f && cp %p /dblog/pgsql/archive/%f'          # command to use to archive a logfile segment
+max_wal_senders = 3             # max number of walsender processes
+primary_slot_name = 'pg02_repl_slot'                    # replication slot on sending server
+hot_standby = on                        # "off" disallows queries during recovery
+effective_cache_size = 12GB
+log_destination = 'stderr'              # Valid values are combinations of
+logging_collector = on                  # Enable capturing of stderr and csvlog
+log_directory = 'log'                   # directory where log files are written,
+log_filename = 'postgresql-%a.log'      # log file name pattern,
+log_rotation_age = 1d                   # Automatic rotation of logfiles will
+log_rotation_size = 0                   # Automatic rotation of logfiles will
+log_truncate_on_rotation = on           # If on, an existing log file with the
+log_line_prefix = '%m [%p] '            # special values:
+log_timezone = 'Asia/Kolkata'
+datestyle = 'iso, mdy'
+timezone = 'Asia/Kolkata'
+lc_messages = 'en_US.UTF-8'                     # locale for system error message
+lc_monetary = 'en_US.UTF-8'                     # locale for monetary formatting
+lc_numeric = 'en_US.UTF-8'                      # locale for number formatting
+lc_time = 'en_US.UTF-8'                         # locale for time formatting
+default_text_search_config = 'pg_catalog.english'
+[root@az-prd-indus-pgdb-02 ~]#
+
+*/
+
+Step 2: Create the recovery conf (IN DATADIR)
+-----------------------------
+/*When you implement a server in Hot Standby mode, you must supply a configuration file that contains the settings that will be used in the event of data recovery. 
+This file is named recovery.conf. To add this file to the standby server, follow these steps:*/
+
+cp -avr ../../usr/share/postgresql/9.3/recovery.conf.sample /../../var/lib/postgresql/9.3/main/recovery.conf
+Edit the recovery file:
+nano /../../var/lib/postgresql/9.3/main/recovery.conf
+
+
+--(Optional) Recovery File
+vi /dbdata01/pgsql/data/recovery.conf
+standby_mode = 'on'
+primary_conninfo = 'host=174.1.0.7 port=5665 user=replusr password=Repl@123'
+trigger_file= '/var/lib/pgsql/trigger_file'
+
+--(Optional) Trigger File
+trigger_file = '/tmp/postgresql.trigger.5665'
+The trigger_file path that you specify is the location where you can add a file when you want the system to fail over to the standby server. The presence of the file "triggers" the failover. Alternatively, you can use the pg_ctl promote command to trigger failover.
+
+
+Step 2: Start the standby server
+-----------------------
+chown -R postgres:postgres /dbdata01/pgsql
+sudo chmod -R 700 /dbdata01/pgsql/data/
+
+service postgresql-14 start
+
+cd /dbdata01/pgsql/data/log
+
+2021-11-12 03:47:23.794 UTC [158211] LOG:  starting PostgreSQL 14.0 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.4.1 20200928 (Red Hat 8.4.1-1), 64-bit
+2021-11-12 03:47:23.794 UTC [158211] LOG:  listening on IPv4 address "0.0.0.0", port 5665
+2021-11-12 03:47:23.794 UTC [158211] LOG:  listening on IPv6 address "::", port 5665
+2021-11-12 03:47:23.800 UTC [158211] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5665"
+2021-11-12 03:47:23.805 UTC [158211] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5665"
+2021-11-12 03:47:23.812 UTC [158213] LOG:  database system was interrupted; last known up at 2021-11-12 03:40:56 UTC
+2021-11-12 03:47:23.838 UTC [158213] LOG:  entering standby mode
+2021-11-12 03:47:23.844 UTC [158213] LOG:  redo starts at 0/A000028
+2021-11-12 03:47:23.846 UTC [158213] LOG:  consistent recovery state reached at 0/A000100
+2021-11-12 03:47:23.847 UTC [158211] LOG:  database system is ready to accept read-only connections
+2021-11-12 03:47:23.872 UTC [158217] LOG:  started streaming WAL from primary at 0/B000000 on timeline 1
+
+
+Step 2: On the standby server, start PSQL:
+-------------------------
+sudo -u postgres psql postgres
+At the PSQL prompt, enter the following query:
+grant select on guestbook to readme;
+
+select * from guestbook;
+
+You should see that the table contains the single row that you originally added. Now, add a second row on the primary server.
+On the primary server, start PSQL:
+
+sudo -u postgres psql postgres
+
+select * from guestbook;
+INSERT INTO guestbook (visitor_email, date, message) VALUES ('dbatest1.com', current_date, 'from Primary');
+INSERT INTO guestbook (visitor_email, date, message) VALUES ('notherdummy.com', current_date, 'Now we are replicating.');
+Switch back to the standby server terminal and repeat the query for all rows of the guestbook:
+
+select * from guestbook;
+You should now see that the standby server has received the update from the primary server.
+--------------------------------------------------------------------------------------------------------------
+Troubleshooting
+==============
+After completing all the steps, if you're not seeing the data replicate, you might have missed a step or some small detail. Common mistakes include:
+
+Leaving a setting commented out.
+Forgetting to replace placeholder text in a setting or command. For example, some settings require a host IP address or a password.
+Entering the wrong IP address or password.
+Using a primary server setting for the standby server or vice-versa.
+If you find yourself in this state, here are the steps to follow:
+
+Look at the Postgres log on each server. These logs can contain information that will help you troubleshoot the issue.
+cd /dbdata01/pgsql/data/log
+Shut down the standby server.
+
+Check the standby server settings and correct them if needed.
+
+On the standby server, rename the main folder to something new, such as main_old_2:
+
+
+$ mv ../../var/lib/postgresql/9.3/main ../../var/lib/postgresql/9.3/main_old_2
+On the standby server, run pgbasebackup again to synchronize the data. Substitute [primary-IP] with your primary server's external IP address:
+
+
+$ sudo -u postgres pg_basebackup -h [primary-IP] -D /var/lib/postgresql/9.3/main -U replication -v -P --xlog-method=stream
+The main folder now needs a copy of recovery.conf. You can simply copy it from the folder that you renamed to main_old_2:
+
+
+$ cp ../../var/lib/postgresql/9.3/main_old_2/recovery.conf ../../var/lib/postgresql/9.3/main/recovery.conf
+Start the standby server.
+
+TESTING 
+===========
+
+-- create a sequence that will serve as the PK of the employees table
+create sequence employees_seq start with 1 increment by 1 no maxvalue minvalue 1 cache 1;
+-- create the employees table
+create table employees (
+        emp_id numeric primary key default nextval('employees_seq'::regclass),
+        first_name text not null,
+        last_name text not null,
+        birth_year numeric not null,
+        birth_month numeric not null,
+        birth_dayofmonth numeric not null
+);
+-- insert some data into the table
+insert into employees (first_name, last_name, birth_year, birth_month, birth_dayofmonth) values ('Emily','James',1983,03,20);
+insert into employees (first_name, last_name, birth_year, birth_month, birth_dayofmonth) values ('John','Smith',1990,08,12);
+
+
+===
+
+
+
+SELECT slot_name, database, active,  pg_xlog_location_diff(pg_current_xlog_insert_location(), restart_lsn) AS retained_bytes FROM pg_replication_slots;
+
+  slot_name   | database | active | retained_bytes
+--------------+----------+--------+----------------
+ slave01_slot |          | f      |      201326688
+(1 row)
+
+
+and after i started the slave :
+
+SELECT slot_name, database, active,pg_xlog_location_diff(pg_current_xlog_insert_location(), restart_lsn) AS retained_bytes FROM pg_replication_slots;
+  slot_name   | database | active | retained_bytes
+--------------+----------+--------+----------------
+ slave01_slot |          | t      |              0
+(1 row)
+
+the second monitoring statement is :
+
+postgres=#  SELECT pg_xlog_location_diff(pg_current_xlog_insert_location(), flush_location) AS lag_bytes, pid, application_name
+ FROM pg_stat_replication;
+
+lag_bytes | pid | application_name
+-----------+-----+------------------
+         0 | 855 | walreceiver
+
+This will show you how many bytes your slave is behind.
+(both statements are to be run on Master unless cascading replicas are in place)
+
+
+
+select * from pg_stat_replication;
+
+
+select * from guestbook;
+INSERT INTO guestbook (visitor_email, date, message) VALUES ('jim@gmail.com', current_date, 'Now we are replicating.');
+INSERT INTO guestbook (visitor_email, date, message) VALUES ('notherdummy.com', current_date, 'Now we are replicating.');
+Switch back to the standby server terminal and repeat the query for all rows of the guestbook:
+
+
+ALTER TABLE public.myname_record OWNER TO rndb;
+ALTER TABLE public.myname_record OWNER TO rndb;
+
+for tbl in `psql -qAt -c "select tablename from pg_tables where schemaname = 'public';" YOUR_DB` ; do  psql -c "alter table \"$tbl\" owner to NEW_OWNER" YOUR_DB ; done
+for tbl in `psql -qAt -c "select sequence_name from information_schema.sequences where sequence_schema = 'public';" YOUR_DB` ; do  psql -c "alter sequence \"$tbl\" owner to NEW_OWNER" YOUR_DB ; done
+for tbl in `psql -qAt -c "select table_name from information_schema.views where table_schema = 'public';" YOUR_DB` ; do  psql -c "alter view \"$tbl\" owner to NEW_OWNER" YOUR_DB ; done
+
+
+SELECT 'ALTER TABLE '|| schemaname || '."' || tablename ||'" OWNER TO my_new_owner;'
+FROM pg_tables WHERE NOT schemaname IN ('pg_catalog', 'information_schema')
+ORDER BY schemaname, tablename;
+SELECT 'ALTER SEQUENCE '|| sequence_schema || '."' || sequence_name ||'" OWNER TO my_new_owner;'
+FROM information_schema.sequences WHERE NOT sequence_schema IN ('pg_catalog', 'information_schema')
+ORDER BY sequence_schema, sequence_name;
+SELECT 'ALTER VIEW '|| table_schema || '."' || table_name ||'" OWNER TO my_new_owner;'
+FROM information_schema.views WHERE NOT table_schema IN ('pg_catalog', 'information_schema')
+ORDER BY table_schema, table_name;
+SELECT 'ALTER TABLE '|| oid::regclass::text ||' OWNER TO my_new_owner;'
+FROM pg_class WHERE relkind = 'm'
+ORDER BY oid;
+
+
+
+===============================================
+--FAILOVER 
+ Alternatively, you can use the pg_ctl promote command to trigger failover.
+
+pg_ctl promote 

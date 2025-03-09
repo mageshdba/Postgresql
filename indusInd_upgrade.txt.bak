@@ -1,0 +1,57 @@
+On New server 
+select pg_promote();
+
+
+su - postgres 
+
+1. check the pg_upgrade *Clusters are compatible*
+
+/usr/pgsql-16/bin/pg_upgrade --old-bindir /usr/pgsql-14/bin --new-bindir /usr/pgsql-16/bin  --old-datadir /dbdata/pgsql  --new-datadir /dbdata/pgsql-16 --check 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+2. once it completed then link the old version to new version using the below command 
+
+usr/pgsql-16/bin/pg_upgrade --old-bindir /usr/pgsql-14/bin --new-bindir /usr/pgsql-16/bin  --old-datadir /data/dbdata/pgsql-14  --new-datadir /data/dbdata/pgsql-16 --link
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3. once all completed then start the service 
+service postgresql-16 start
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+4. source  the FILE
+update_extensions.sql
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+5. Once you start the new server, consider running And switch the user as postgres , do Vacuum :   
+sudo -u postgres
+/usr/pgsql-16/bin/vacuumdb --all --analyze-in-stages
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+6. Running this script will delete the old clusters data files:
+
+./delete_old_cluster.sh
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+7. change the port :
+
+sudo vim /etc/postgresql/16/main/postgresql.conf
+port = 5432 # Change to 5432 here
+sudo vim /etc/postgresql/14/main/postgresql.conf
+port = 5665 # Change to 5433 here
+
+
+#Start the postgreqsl service.
+
+sudo vim /etc/postgresql/16/main/postgresql.conf
+port = 5665 # Change to 5432 here
+sudo vim /etc/postgresql/14/main/postgresql.conf
+port = 5432 # Change to 5433 here
+
+#Start the postgreqsl service.
+
+service postgresql-16 start
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+sudo yum install percona-pgaudit16
+

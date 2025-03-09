@@ -1,0 +1,80 @@
+--Postgres 
+
+
+--For pg_hba.conf
+
+[root@oci-odr-shared-prd-pgdb-01 ~]# cat /var/lib/pgsql/16/data/pg_hba.conf
+#local   all             all                                     peer
+#host    all             all             0.0.0.0/0           scram-sha-256
+host    replication    bkpadmin             127.0.0.1/32    scram-sha-256
+host    all             m2pappusr             192.168.0.0/16    scram-sha-256
+host    all             m2pappusr             172.185.4.100/32     reject
+host    all             all             0.0.0.0/0           scram-sha-256
+local   all             all                                     peer
+
+
+
+---- Mongo
+
+--For Standalone
+
+use admin
+db.createUser(
+   {
+     user: "demo",
+     pwd: "Open@123",
+     roles: [ { role: "readWrite", db: "reporting" } ],
+     authenticationRestrictions: [ {
+        clientSource: ["192.0.2.0"],
+        serverAddress: ["171.5.0.133"] // IP address of the client machine
+     } ]
+   }
+)
+
+
+--For Replicaset
+
+use admin
+db.createUser(
+   {
+     user: "dbuser",
+     pwd: "password",
+     roles: [ { role: "readWrite", db: "reporting" } ],
+     authenticationRestrictions: [ {
+        clientSource: ["192.0.2.0"],
+        serverAddress: ["172.184.72.0/22", "192.168.1.101", "192.168.1.102"] // Add the IP addresses of all MongoDB servers in the replica set
+     } ]
+   }
+)
+
+
+
+
+
+
+{
+  _id: 'admin.demo',
+  userId: UUID('10ac8772-1d40-4d13-b72a-f8991f3c3398'),
+  user: 'demo',
+  db: 'admin',
+  roles: [ { role: 'readWrite', db: 'reporting' } ],
+  mechanisms: [ 'SCRAM-SHA-1', 'SCRAM-SHA-256' ]
+}
+
+
+
+db.system.users.update({"user":"m2pappusr"}, {$set:{"user":"uatappusr"}});
+
+
+
+CREATE USER `clsuser`@`172.184.72.0/22` identified by 'Clsuser@123' ;
+GRANT SELECT, RELOAD, SHUTDOWN, PROCESS, FILE, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE USER ON *.* TO `clsuser`@`172.184.72.0/22`  ;
+GRANT CLONE_ADMIN,CONNECTION_ADMIN,GROUP_REPLICATION_ADMIN,PERSIST_RO_VARIABLES_ADMIN,REPLICATION_APPLIER,REPLICATION_SLAVE_ADMIN,ROLE_ADMIN,SYSTEM_VARIABLES_ADMIN ON *.* TO `clsuser`@`172.184.72.0/22`;
+GRANT INSERT, UPDATE, DELETE ON `mysql`.* TO `clsuser`@`172.184.72.0/22` ;
+GRANT INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `mysql_innodb_cluster_metadata`.* TO `clsuser`@`172.184.72.0/22` ;
+GRANT INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `mysql_innodb_cluster_metadata_bkp`.* TO `clsuser`@`172.184.72.0/22` ;
+GRANT INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EVENT, TRIGGER ON `mysql_innodb_cluster_metadata_previous`.* TO `clsuser`@`172.184.72.0/22`;
+ 
+GRANT GRANT OPTION ON *.* TO 'clsuser'@'172.184.72.0/22';
+
+TRUNCATE TABLE card_txn_merchant_info_logs;  

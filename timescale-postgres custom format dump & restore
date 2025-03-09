@@ -1,0 +1,79 @@
+step 1 : take the dump using this command as custom format
+
+nohup pg_dump -h 127.0.0.1 -p 5665 -Udb2dba -Fc txnaggregator -f /backup/m2p274/txn/txnaggregator.sql
+
+
+step 2: create the database with appuser ownership 
+
+create database "aggregator_DCMSSURYODAYBNK" ;
+
+alter database :"aggregator_DCMSSURYODAYBNK" owner to m2pappusr;
+
+
+step 3 : connect the database and create the extension timescaledb
+
+\c aggregator_DCMSSURYODAYBNK
+
+create extension timescaledb;
+create extension timescaledb_toolkit;
+
+
+step 4 : execute the command in postgres
+
+select timescaledb_pre_restore();
+
+
+step 5 : restore the custom backup using this command 
+
+
+nohup pg_restore -h 127.0.0.1 -Udb2dba -W --port 5432 -d --no-owner -Fc -v -d "aggregator_DCMSSURYODAYBNK" txnaggregator.sql > ts1.log
+
+step 6 : count check
+
+select count(1) from public.transaction ;
+
+select timescaledb_post_restore();
+
+select count(1) from public.transaction ;
+
+step 7 : execute this command 
+
+
+show timescaledb.restoring;
+
+
+
+
+
+---12-04-2024  HDFC txnaggregator master setup in hypertable
+psql -Upostgres -h 127.0.0.1 -p 5665 -Um2pdba aggregator_DCMSSURYODAYBNK -c "COPY (select * from public.transaction ) TO '/backup/m2p331/transaction.sql';"
+
+
+select timescaledb_pre_restore();
+
+PGPASSWORD='Open@123' psql -Uhdfcdba -h 127.0.0.1 --port 5665 -d aggregator_DCMSSURYODAYBNK  -c "copy public.t1 from '/dbbackup/m2p274/txn.csv' delimiter ',' csv header;"
+
+
+\c aggregator_cug_hdfcfiiee185rj
+
+select timescaledb_post_restore();
+
+insert into public.transaction(select * from public.t1);
+
+
+========================================
+
+PGPASSWORD='Smhnn@123' psql -Udb2dba --port 5665 -h 127.0.0.1  -c"COPY (select * from public.transaction ) TO '/dbbackup/m2p274/txn.csv' delimiter ',' CSV HEADER ;" -d aggregator_DCMSSURYODAYBNK 
+
+nohup sudo -u postgres psql --port 5665 -d m2p -c "\copy staging.t_acs_preq from /backup/acs_pareq_res_sep06.csv delimiter , csv header;" &
+
+
+select timescaledb_pre_restore();
+
+PGPASSWORD='Open@123' psql -Uhdfcdba -h 127.0.0.1 --port 5665 -d aggregator_DCMSSURYODAYBNK  -c "copy public.t1 from '/dbbackup/m2p274/txn.csv' delimiter ',' csv header;"
+
+\c aggregator_cug_hdfcfiiee185rj
+
+select timescaledb_post_restore();
+
+insert into public.transaction(select * from public.t1);

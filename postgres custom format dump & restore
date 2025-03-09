@@ -1,0 +1,45 @@
+step 1 : take the dump using this command as custom format
+
+nohup pg_dump -h 127.0.0.1 -p 5665 -Udb2dba -Fc txnaggregator -f /backup/m2p471/txnaggregator.sql
+
+
+step 2: create the database with appuser ownership 
+
+create database txnaggregator ;
+
+alter database txnaggregator owner to m2pappusr;
+
+
+step 3 : connect the database and create the extension timescaledb
+
+\c txnaggregator
+
+create extension timescaledb;
+create extension timescaledb_toolkit;
+
+
+ALTER DATABASE txnaggregator SET timescaledb.restoring='on';
+
+step 4 : execute the command in postgres
+
+select timescaledb_pre_restore();
+
+
+step 5 : restore the custom backup using this command 
+
+
+nohup pg_restore -h 127.0.0.1 -Udb2dba -W --port 5665 -d aggregator_lqzomato --no-owner -Fc -v --file=txnaggregator.sql > ts1.log
+
+step 6 : count check
+
+select count(1) from public.transaction ;
+
+select timescaledb_post_restore();
+
+select count(1) from public.transaction ;
+
+step 7 : execute this command 
+
+
+show timescaledb.restoring;
+
