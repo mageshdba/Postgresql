@@ -1,0 +1,39 @@
+UAT FREEIPA  #
+
+171.1.4.100   jumpbox
+
+171.2.69.37  ip
+
+https://docs.percona.com/postgresql/14/
+
+
+https://docs.percona.com/postgresql/14/release-notes-v14.7.html
+
+
+https://downloads.percona.com/downloads/postgresql-distribution-14/14.8/binary/redhat/8/x86_64/ppg-14.8-el8-x86_64-bundle.tar
+
+
+
+DhyCHR+5|(23
+
+
+CREATE USER m2pappusr WITH createdb PASSWORD 'DhyCHR+5|(23';
+
+
+
+
+
+171.2.69.37  ip
+
+171.1.4.100   jumpbox
+
+
+m2pappusr     usrname 
+
+
+DhyCHR+5|(23   password
+
+
+
+
+[root@aws-ind-aps1-syn-shared-vkyc-mysql01 data]# psql -U db2dba -W --port 4554 --dbname postgres --host 127.0.0.1
